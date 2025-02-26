@@ -1,16 +1,20 @@
-module Penrose where
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+module Penrose (
+  Tile(..), Subtile(..), Edge(..),
+  system, automaton, geometry, transducer, streamer,
+  Golden(..), Mod10(..)) where
 import Substitution
 import Geometry
 import Automata
 import qualified Data.Set as S
 import Kleenex
 
-data PenroseTile = U | V deriving (Show, Eq, Ord, Enum, Bounded)
-data PenroseEdge = E0 | E1 | E2 | E3 deriving (Show, Eq, Ord, Enum, Bounded)
-data PenroseSubtile = S0 | S1 | S2 deriving (Show, Eq, Ord, Enum, Bounded)
+data Tile = U | V deriving (Show, Eq, Ord, Enum, Bounded)
+data Edge = E0 | E1 | E2 | E3 deriving (Show, Eq, Ord, Enum, Bounded)
+data Subtile = S0 | S1 | S2 deriving (Show, Eq, Ord, Enum, Bounded)
 
-penrose3A :: FSA (Alphabet PenroseTile PenroseSubtile PenroseEdge) (Maybe PenroseTile)
-penrose3A = FST {..}
+automaton :: FSA (Alphabet Tile Subtile Edge) (Maybe Tile)
+automaton = FST {..}
   where
     states = S.fromList [Nothing, Just U, Just V]
     transitions = [
@@ -29,8 +33,8 @@ penrose3A = FST {..}
         (Just U, Inflate V S1, (), Just V)
       ]
 
-penrose3 :: SubstSystem PenroseTile PenroseSubtile PenroseEdge Int ()
-penrose3 = SubstSystem {..}
+system :: SubstSystem Tile Subtile Edge Int ()
+system = SubstSystem {..}
   where
     subtile V S0 = V
     subtile V S1 = U
@@ -38,6 +42,8 @@ penrose3 = SubstSystem {..}
     subtile U S1 = U
     subtile U S2 = U
     subtile _ _ = error "Unrecognized subtile"
+
+    stageMap _ = ()
 
     substMap _ V = fromPairs [
         (Left (E0, 1), Left (E3, 2)),
@@ -98,8 +104,8 @@ instance (Integral a) => Draw2D (Golden a) where
     fromIntegral (d - c) * sin (4*pi / 5) -
     fromIntegral b * sin (2*pi / 5))
 
-penrose3G :: Tiles PenroseTile PenroseEdge Mod10 (Golden Int)
-penrose3G = Tiles {..}
+geometry :: Tiles Tile Edge Mod10 (Golden Int)
+geometry = Tiles {..}
   where
     pos1 = Golden 1 0 0 0
     neg1 = Golden (-1) 0 0 0
@@ -117,8 +123,8 @@ penrose3G = Tiles {..}
     edgeMap V E2 = (Mod10 0, neg1)
     edgeMap V E3 = (Mod10 6, pos1)
 
-penrose3T = induceFromFunction (adjRec penrose3) penrose3A
+transducer = induceFromFunction (adjRec system) automaton
 
 
-penrose3S = toKMC (numberStates (normalizeMachine penrose3T))
+streamer = toKMC (numberStates (normalizeMachine transducer))
 

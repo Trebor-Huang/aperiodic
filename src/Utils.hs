@@ -1,8 +1,6 @@
 module Utils where
 import Data.List
 import Data.Function
-import GHC.Stack
-import GHC.Base ( assert )
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -24,10 +22,6 @@ bfs prune key start branch = searchspace
           not $ any (elem (key a') . map (key . fst)) as])
       (tail $ inits epochs)
     -- go = nubBy ((==) `on` key) $ start : filter prune (branch =<< go)
-
-
-assertWith :: HasCallStack => (a -> Bool) -> a -> a
-assertWith f a = assert (f a) a
 
 type UnionFind s = Map s s
 lookupUF :: Ord s => UnionFind s -> s -> s

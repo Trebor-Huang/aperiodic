@@ -16,10 +16,10 @@ library
       Geometry
       Substitution
       Penrose
+      Spectre
       Automata
       Kleenex
   other-modules:
-      Spectre
       Utils
   hs-source-dirs:
       src

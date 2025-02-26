@@ -24,6 +24,7 @@ library:
     - Geometry
     - Substitution
     - Penrose
+    - Spectre
     - Automata
     - Kleenex
 

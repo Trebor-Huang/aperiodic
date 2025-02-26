@@ -1,6 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE InstanceSigs #-}
 module Substitution where
 
 import Data.Tuple (swap)
@@ -10,20 +9,20 @@ import Data.Tuple (swap)
 type Pairing a = a -> a
 
 -- | Auxiliary function to help construct pairs
-fromPairs :: Eq a => [(a, a)] -> Pairing a
+fromPairs :: (Show a, Eq a) => [(a, a)] -> Pairing a
 fromPairs p a = case a `lookup` p of
   Just b -> b
   Nothing -> case a `lookup` map swap p of
     Just b -> b
-    Nothing -> error "Bad pairing"
+    Nothing -> error $ "Bad pairing: " <> show a <> " within " <> show p
 
 data SubstSystem tile subtile edge subedge stage
   = SubstSystem {
     -- | Records the tile type of each subtile
     subtile :: tile -> subtile -> tile,
 
+    -- | What stage does a subtile label lie in
     stageMap :: subtile -> stage,
-    -- substMap :: tile -> stage -> ...
 
     -- | In a substitution rule, the subedges of the parent
     -- and all the edges of the children are perfectly paired.
@@ -50,9 +49,8 @@ instance (Bounded tile, Bounded subtile, Bounded edge)
   minBound = Begin minBound minBound
   maxBound = Inflate maxBound maxBound
 
-instance (Bounded tile, Bounded subtile, Bounded edge, Enum tile, Enum subtile, Enum edge)
+instance forall tile subtile edge. (Bounded tile, Bounded subtile, Bounded edge, Enum tile, Enum subtile, Enum edge)
   => Enum (Alphabet tile subtile edge) where
-  toEnum :: forall tile subtile edge. (Bounded tile, Bounded subtile, Bounded edge, Enum tile, Enum subtile, Enum edge) => Int -> Alphabet tile subtile edge
   toEnum n =
     let
       tm = (1 + fromEnum (maxBound :: tile))
@@ -63,8 +61,6 @@ instance (Bounded tile, Bounded subtile, Bounded edge, Enum tile, Enum subtile, 
         Begin (toEnum (n `div` em)) (toEnum (n `mod` em))
       else let n' = n - tm * em in
         Inflate (toEnum (n' `div` sm)) (toEnum (n' `mod` sm))
-
-  fromEnum :: forall tile subtile edge. (Bounded tile, Bounded subtile, Bounded edge, Enum tile, Enum subtile, Enum edge) => Alphabet tile subtile edge -> Int
   fromEnum (Begin t e) = fromEnum e +
     fromEnum t * (1 + fromEnum (maxBound :: edge))
   fromEnum (Inflate t s) = fromEnum s +

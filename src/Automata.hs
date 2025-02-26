@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 module Automata where
-import Data.List (delete, nub)
+import Data.List (nub)
 import Data.Function ((&))
 import Control.Monad (guard)
 import Data.Maybe ( fromJust, mapMaybe, isJust, listToMaybe )
@@ -8,7 +8,6 @@ import Utils
 import Substitution
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Map (Map)
 import qualified Data.Map as M
 
 

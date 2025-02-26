@@ -1,16 +1,18 @@
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 import Graphics.Gloss
 import Geometry
 import Substitution
-import Penrose
+import qualified Spectre as T
 import Automata
 import GHC.Clock (getMonotonicTime)
 import Kleenex (adjSST)
 import System.Exit (exitSuccess)
 
 rendered =
-  draw (adjSST penrose3S) penrose3G inBounds
-    (U :< repeat (U, S1)) E0
+  draw (adjRec T.system) T.geometry inBounds
+    (T.Spectre :< [(T.Psi, T.SS0), (T.Xi, T.SH4)] ++ cycle [(T.Sigma, T.SH4), (T.Xi, T.SH3)]) T.S0
   where
     factor = 10
     inBounds (x, y) =
@@ -19,7 +21,7 @@ rendered =
 
 main :: IO ()
 main = do
-  putStrLn $ "Inference complete, " <> show (length $ states $ fst penrose3T) <> " states"
+  putStrLn $ "Inference complete, " <> show (length $ states $ fst T.transducer) <> " states"
   t1 <- getMonotonicTime
   putStrLn "Starting calculation..."
   putStrLn $ "Render complete, " <> show (length rendered) <> " tiles in total"
@@ -29,23 +31,17 @@ main = do
   display FullScreen white
     (scale 40 40 $ pictures $ zipWith makePolygon [0..] rendered)
   where
-    chooseColor (t :< ts) =
-      case t of
-        V -> cyan
-        U -> blue
-      -- case ts !! 20 of
-      --   (V, S0) -> blue
-      --   (V, S1) -> yellow
-      --   (U, S0) -> orange
-      --   (U, S1) -> red
-      --   (U, S2) -> green
-      --   _ -> black
+    chooseColor _ = green
 
-    makePolygon :: Int -> (Signature PenroseTile PenroseSubtile, Path) -> Picture
-    makePolygon _ (sig, p) = scale 0.5 0.5 $ pictures [
-        color (chooseColor sig) (polygon p),
-        lineLoop p
-        -- translate (sum (map fst p) / 4) (sum (map snd p) / 4) $
-        -- scale 0.002 0.002 $
-        --   text (show i)
+    makePolygon :: Int -> (Signature T.Tile T.Subtile, Path) -> Picture
+    makePolygon _ (sig@(t:<ts), p) = scale 0.5 0.5 $ pictures [
+        -- color (chooseColor sig) (polygon p),
+        lineLoop p,
+        uncurry translate (average p) $
+        scale 0.002 0.002 $
+          text (show (fst (head ts)))
       ]
+
+    average :: [(Float, Float)] -> (Float, Float)
+    average f = let l = length f in
+      (sum (map fst f) / fromIntegral l, sum (map snd f) / fromIntegral l)
