@@ -27,6 +27,7 @@ library
       LambdaCase
       FunctionalDependencies
       DeriveFunctor
+      RecordWildCards
   ghc-options: -Wall -fno-warn-incomplete-uni-patterns
   build-depends:
       base >=4.13 && <5
@@ -42,6 +43,7 @@ executable Aperiodic
       LambdaCase
       FunctionalDependencies
       DeriveFunctor
+      RecordWildCards
   ghc-options: -Wall -fno-warn-incomplete-uni-patterns
   build-depends:
       Aperiodic

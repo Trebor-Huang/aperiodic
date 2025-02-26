@@ -1,10 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RecordWildCards #-}
-module Spectre where
+module Spectre (
+  SpectreTile(..), SpectreSubtile(..), SpectreEdge(..),
+  spectre3, spectre3A, spectre3G, spectre3T, spectre3S,
+  TrigNum(..), Mod12(..)) where
 import qualified Data.Set as S
 import Geometry
 import Substitution
 import Automata
+import Kleenex
 
 newtype Mod12 = Mod12 Int
 instance Semigroup Mod12 where
@@ -56,10 +59,14 @@ instance (Num a) => Vector2 Mod12 (TrigNum a) where
 
   negV = fmap negate
 
-data SpectreTile = G | D | J | L | X | P | S | F | Y | Spectre
+-- The order of constructors is used later (as enums), so don't change them!
+data SpectreTile = Gamma | Delta | Theta | Lambda | Xi | Pi | Sigma | Phi | Psi | Spectre
   deriving (Show, Eq, Ord, Enum, Bounded)
+-- The edge of hexagons are counterclockwise
+-- (with H5/H6 sometimes referring to eta, which can be paired against itself)
+-- and the edge of spectres are clockwise.
 data SpectreEdge
-  = H0 | H1 | H2 | H3 | H4 | H5
+  = H0 | H1 | H2 | H3 | H4 | H5 | H6
   | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 | S10 | S11 | S12 | S13
   deriving (Show, Eq, Ord, Enum, Bounded)
 data SpectreSubtile
@@ -71,4 +78,57 @@ spectre3A :: FSA (Alphabet SpectreTile SpectreSubtile SpectreEdge) (Maybe Spectr
 spectre3A = FST {..}
   where
     states = S.fromList $ Nothing : map Just [minBound..maxBound]
-    transitions = [] ++ []
+    transitions =
+      -- Start with spectres
+      [(Nothing, Begin Spectre sh, (), Just Spectre) | sh <- [S0 .. S13]] ++
+      -- Spectres to hexagons
+      [(Just Spectre, Inflate hex ss, (), Just hex) |
+        hex <- [Gamma .. Psi],
+        ss <- if hex == Gamma then [SS0, SS1] else [SS0]] ++
+      -- hexagons to hexagons
+      [(Just hex1, Inflate hex2 ss, (), Just hex2) |
+        hex2 <- [Gamma .. Psi],
+        (hex1, ss) <- zip (subtiles !! fromEnum hex2) [SH0 .. SH7]]
+
+subtiles :: [[SpectreTile]]
+subtiles = [
+    [Phi, Xi, Gamma, Sigma, Pi, Delta, Theta],
+    [Phi, Pi, Gamma, Sigma, Xi, Delta, Phi, Xi],
+    [Phi, Pi, Gamma, Sigma, Psi, Delta, Phi, Pi],
+    [Phi, Pi, Gamma, Sigma, Psi, Delta, Phi, Xi],
+    [Phi, Psi, Gamma, Sigma, Psi, Delta, Phi, Pi],
+    [Phi, Psi, Gamma, Sigma, Psi, Delta, Phi, Xi],
+    [Lambda, Pi, Gamma, Sigma, Xi, Delta, Phi, Xi],
+    [Phi, Pi, Gamma, Sigma, Psi, Delta, Phi, Psi],
+    [Phi, Psi, Gamma, Sigma, Psi, Delta, Phi, Psi]
+  ]
+
+spectre3G :: Tiles SpectreTile SpectreEdge Mod12 (TrigNum Int)
+spectre3G = Tiles {..}
+  where
+    edges Spectre = [S0 .. S13]
+    edges r = error $ "This tile should not exist in the final result: " <> show r
+
+    -- angles = [2, 10, 1, 9, 3, 11, 8, 0, 9, 1, 10, 6, 9, 5]
+    angles = [10, 2, 11, 3, 9, 1, 4, 0, 3, 11, 2, 6, 3, 7]
+
+    edgeMap Spectre s = (Mod12 (angles !! fromEnum s),
+      if even (fromEnum s) then TrigNum 1 0 0 0 else TrigNum (-1) 0 0 0)
+    edgeMap r _ = error $ "This tile should not exist in the final result: " <> show r
+
+spectre3 :: SubstSystem SpectreTile SpectreSubtile SpectreEdge Int
+spectre3 = SubstSystem {..}
+  where
+    subtile _ SS0 = Spectre
+    subtile _ SS1 = Spectre
+    subtile tile sub = subtiles !! fromEnum tile !! fromEnum sub
+
+    -- Expanding to spectres
+    -- substMap Delta = fromPairs []
+
+    substMap tile = fromPairs []
+
+spectre3T = induceFromFunction (adjRec spectre3) spectre3A
+
+
+spectre3S = toKMC (numberStates (normalizeMachine spectre3T))

@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Penrose where
 import Substitution
 import Geometry

@@ -1,5 +1,4 @@
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE RecordWildCards #-}
 module Automata where
 import Data.List (delete, nub)
 import Data.Function ((&))
