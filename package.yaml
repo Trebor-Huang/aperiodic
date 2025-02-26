@@ -2,8 +2,8 @@ spec-version: 0.36.0
 name: Aperiodic
 version: 0.1.0
 synopsis: Aperiodic
-description: Description
-category: Development
+description: An incremental generator for arbitrarily large patches of aperiodic tilings
+category: Math
 
 ghc-options: -Wall -fno-warn-incomplete-uni-patterns
 
