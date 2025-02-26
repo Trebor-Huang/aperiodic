@@ -10,6 +10,6 @@ We have three algorithms `Signature tile subtile -> edge -> Maybe (Signature til
 
 - The recursive algorithm is the simplest, but it hangs on some infinite inputs. On finite inputs, it sometimes only produces partial results, i.e. some tiles are determined by the input, but the algorithm cannot recognize them and gives up.
 - The naive transductive algorithm is very slow, needs to read the entire input before producing the answer (and hence does not handle any infinite input), but it will calculate all the tiles that are determined by the input (and connected to the starting tile).
-- The streaming transductive algorithm combines the pros of the previous two. It is about as fast than the recursive algorithm, handles infinite inputs and produces the complete answer.
+- The streaming transductive algorithm combines the pros of the previous two. It is about as fast as the recursive algorithm, handles infinite inputs and produces the complete answer.
 
 Some periodic infinite inputs can't be handled because even the first token of the output cannot be determined without knowing about the periodicity. Since the input format is an arbitrary infinite list, no algorithm can handle this. I might write another algorithm that specifically deals with these rational inputs, by including the period information in the input format.

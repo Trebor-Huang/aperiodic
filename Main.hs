@@ -1,47 +1,77 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
-import Graphics.Gloss
 import Geometry
 import Substitution
 import qualified Spectre as T
 import Automata
-import GHC.Clock (getMonotonicTime)
 import Kleenex (adjSST)
-import System.Exit (exitSuccess)
 
-rendered =
-  draw (adjRec T.system) T.geometry inBounds
-    (T.Spectre :< [(T.Psi, T.SS0), (T.Xi, T.SH4)] ++ cycle [(T.Sigma, T.SH4), (T.Xi, T.SH3)]) T.S0
+import GHC.Clock (getMonotonicTime)
+import System.Exit (exitSuccess)
+import KMC.SymbolicSST (SST(sstS))
+import qualified Data.Set as S
+import Diagrams.Prelude hiding ((:<))
+import Diagrams.Backend.SVG
+import Data.Colour.CIE
+import Data.Colour.CIE.Illuminant
+
+sig :: Signature T.Tile T.Subtile
+sig = T.Spectre :<
+  [(T.Psi, T.SS0)] ++
+  replicate 10 (T.Psi, T.SH4)
+
+boundX = 100.0
+boundY = 80.0
+
+calculated =
+  draw (adjRec T.system) T.geometry inBounds sig T.S0
   where
-    factor = 10
     inBounds (x, y) =
-      x < factor * 4 && x > - (factor * 4) &&
-      y < factor * 3 && y > - (factor * 3)
+      x < boundX*0.5 && x > - (boundX*0.5) &&
+      y < boundY*0.5 && y > - (boundY*0.5)
+
+rendered :: Diagram B
+rendered = map makePolygon calculated # mconcat #
+  rectEnvelope (mkP2 (- (boundX * 0.5)) (- (boundY * 0.5))) (V2 boundX boundY)
+  where
+    fromHue h = cieLAB d65 80 (70 * cos h) (70 * sin h)
+
+    chooseColor T.Delta _ = fromHue 0
+    chooseColor T.Theta _ = fromHue 0.7
+    chooseColor T.Lambda _ = fromHue 1.4
+    chooseColor T.Xi _ = fromHue 2.1
+    chooseColor T.Pi _ = fromHue 2.8
+    chooseColor T.Phi _ = fromHue (-0.7)
+    chooseColor T.Psi _ = fromHue (-1.4)
+    chooseColor T.Gamma T.SS0 = cieLAB d65 85 (70 * cos (-2.1)) (70 * sin (-2.1))
+    chooseColor T.Gamma T.SS1 = cieLAB d65 75 (70 * cos (-2.1)) (70 * sin (-2.1))
+    chooseColor T.Sigma _ = fromHue (-2.8)
+    chooseColor _ _ = white
+
+    average :: [(Double, Double)] -> (Double, Double)
+    average f = let l = length f in
+      (sum (map fst f) / fromIntegral l, sum (map snd f) / fromIntegral l)
+
+    makePolygon :: (Signature T.Tile T.Subtile, [(Double, Double)]) -> Diagram B
+    makePolygon (_:<ts, coords) =
+      text (show (fst (head ts))) #
+      font "CMU Serif" #
+      moveTo (p2 $ average coords)
+      `atop`
+      fromVertices (map p2 coords) #
+      mapLoc closeLine #
+      strokeLocLoop #
+      lw ultraThin #
+      fc (uncurry chooseColor (head ts))
 
 main :: IO ()
 main = do
-  putStrLn $ "Inference complete, " <> show (length $ states $ fst T.transducer) <> " states"
+  -- putStrLn $ "Inference complete, " <> show (length $ states $ fst T.transducer) <> " states"
+  -- putStrLn $ "Streaming transducer has " <> show (S.size $ sstS T.streamer) <> " states"
   t1 <- getMonotonicTime
   putStrLn "Starting calculation..."
-  putStrLn $ "Render complete, " <> show (length rendered) <> " tiles in total"
+  putStrLn $ "Render complete, " <> show (length calculated) <> " tiles in total"
   t2 <- getMonotonicTime
   putStrLn $ "Time used: " <> show (t2 - t1)
-  -- exitSuccess
-  display FullScreen white
-    (scale 40 40 $ pictures $ zipWith makePolygon [0..] rendered)
-  where
-    chooseColor _ = green
-
-    makePolygon :: Int -> (Signature T.Tile T.Subtile, Path) -> Picture
-    makePolygon _ (sig@(t:<ts), p) = scale 0.5 0.5 $ pictures [
-        -- color (chooseColor sig) (polygon p),
-        lineLoop p,
-        uncurry translate (average p) $
-        scale 0.002 0.002 $
-          text (show (fst (head ts)))
-      ]
-
-    average :: [(Float, Float)] -> (Float, Float)
-    average f = let l = length f in
-      (sum (map fst f) / fromIntegral l, sum (map snd f) / fromIntegral l)
+  renderSVG "./output/render.svg" (dims (V2 1000 0)) rendered

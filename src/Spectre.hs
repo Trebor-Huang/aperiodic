@@ -65,7 +65,19 @@ instance (Num a) => Vector2 Mod12 (TrigNum a) where
 
 -- The order of constructors is used later (as enums), so don't change them!
 data Tile = Gamma | Delta | Theta | Lambda | Xi | Pi | Sigma | Phi | Psi | Spectre
-  deriving (Show, Eq, Ord, Enum, Bounded)
+  deriving (Eq, Ord, Enum, Bounded)
+instance Show Tile where
+  show Gamma = "Γ"
+  show Delta = "Δ"
+  show Theta = "Θ"
+  show Lambda = "Λ"
+  show Xi = "Ξ"
+  show Pi = "Π"
+  show Sigma = "Σ"
+  show Phi = "Φ"
+  show Psi = "Ψ"
+  show Spectre = "S"
+
 -- The edge of hexagons are counterclockwise
 -- (and for the edge eta, we split it into H5(+) and H6(-) in the couterclockwise direction)
 -- and the edge of spectres are clockwise.

@@ -28,9 +28,9 @@ infixl 6 -.
 -- instance Num a => Monoid (V2 a) where
 --   mempty = V2 1 0
 
--- | Converts `vec` to Float vectors for drawing
+-- | Converts `vec` to Double vectors for drawing
 class Draw2D vec where
-  toVec :: vec -> (Float, Float)
+  toVec :: vec -> (Double, Double)
 
 data Tiles tile edge rot vec = Tiles {
   edges :: tile -> [edge],
@@ -68,11 +68,11 @@ draw :: (Vector2 rot vec, Draw2D vec, Eq edge, Eq vec)
   => (Signature tile subtile -> edge -> Maybe (Signature tile subtile, edge))
   -> Tiles tile edge rot vec
   -- The "in-bounds" predicate
-  -> ((Float, Float) -> Bool)
+  -> ((Double, Double) -> Bool)
   -> Signature tile subtile
   -> edge
   -- A list of polygons
-  -> [(Signature tile subtile, [(Float, Float)])]
+  -> [(Signature tile subtile, [(Double, Double)])]
 draw adjrec tiles inBounds sig e0 =
   map (\((sig, _, _, _, c), _) -> (sig, c)) $
     bfs

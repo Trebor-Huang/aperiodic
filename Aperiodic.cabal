@@ -48,7 +48,10 @@ executable Aperiodic
   build-depends:
       Aperiodic
     , base >=4.13 && <5
+    , colour >=2.3 && <3
     , containers >=0.6 && <1
-    , gloss >=1.13 && <2
+    , diagrams-core >=1.4 && <2
+    , diagrams-lib >=1.4 && <2
+    , diagrams-svg >=1.4 && <2
     , kexc >=0.1
   default-language: Haskell2010
