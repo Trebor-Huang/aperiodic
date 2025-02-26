@@ -1,0 +1,52 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           Aperiodic
+version:        0.1.0
+synopsis:       Aperiodic
+description:    Description
+category:       Development
+build-type:     Simple
+
+library
+  exposed-modules:
+      Geometry
+      Substitution
+      Penrose
+      Automata
+      Kleenex
+  other-modules:
+      Spectre
+      Utils
+  hs-source-dirs:
+      src
+  default-extensions:
+      LambdaCase
+      FunctionalDependencies
+      DeriveFunctor
+  ghc-options: -Wall -fno-warn-incomplete-uni-patterns
+  build-depends:
+      base >=4.13 && <5
+    , containers >=0.6 && <1
+    , kexc >=0.1
+  default-language: Haskell2010
+
+executable Aperiodic
+  main-is: Main.hs
+  hs-source-dirs:
+      ./
+  default-extensions:
+      LambdaCase
+      FunctionalDependencies
+      DeriveFunctor
+  ghc-options: -Wall -fno-warn-incomplete-uni-patterns
+  build-depends:
+      Aperiodic
+    , base >=4.13 && <5
+    , containers >=0.6 && <1
+    , gloss >=1.13 && <2
+    , kexc >=0.1
+  default-language: Haskell2010

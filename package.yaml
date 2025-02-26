@@ -1,0 +1,34 @@
+spec-version: 0.36.0
+name: Aperiodic
+version: 0.1.0
+synopsis: Aperiodic
+description: Description
+category: Development
+
+ghc-options: -Wall -fno-warn-incomplete-uni-patterns
+
+default-extensions:
+  - LambdaCase
+  - FunctionalDependencies
+  - DeriveFunctor
+
+dependencies:
+  - base >= 4.13 && < 5
+  - containers >= 0.6 && < 1
+  - kexc >= 0.1
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Geometry
+    - Substitution
+    - Penrose
+    - Automata
+    - Kleenex
+
+executable:
+  main: Main.hs
+  source-dirs: .
+  dependencies:
+    - Aperiodic
+    - gloss >= 1.13 && < 2
