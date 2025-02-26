@@ -29,7 +29,7 @@ penrose3A = FST {..}
         (Just U, Inflate V S1, (), Just V)
       ]
 
-penrose3 :: SubstSystem PenroseTile PenroseSubtile PenroseEdge Int
+penrose3 :: SubstSystem PenroseTile PenroseSubtile PenroseEdge Int ()
 penrose3 = SubstSystem {..}
   where
     subtile V S0 = V
@@ -39,7 +39,7 @@ penrose3 = SubstSystem {..}
     subtile U S2 = U
     subtile _ _ = error "Unrecognized subtile"
 
-    substMap V = fromPairs [
+    substMap _ V = fromPairs [
         (Left (E0, 1), Left (E3, 2)),
         (Left (E0, 0), Right (S0, E3)),
         (Left (E1, 0), Right (S1, E0)),
@@ -50,7 +50,7 @@ penrose3 = SubstSystem {..}
         (Left (E3, 0), Right (S0, E1)),
         (Left (E3, 1), Right (S0, E2))
       ]
-    substMap U = fromPairs [
+    substMap _ U = fromPairs [
         (Left (E0, 2), Right (S1, E2)),
         (Left (E0, 1), Right (S1, E3)),
         (Left (E0, 0), Left (E1, 1)),

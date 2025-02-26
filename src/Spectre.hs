@@ -116,7 +116,7 @@ spectre3G = Tiles {..}
       if even (fromEnum s) then TrigNum 1 0 0 0 else TrigNum (-1) 0 0 0)
     edgeMap r _ = error $ "This tile should not exist in the final result: " <> show r
 
-spectre3 :: SubstSystem SpectreTile SpectreSubtile SpectreEdge Int
+spectre3 :: SubstSystem SpectreTile SpectreSubtile SpectreEdge Int ()
 spectre3 = SubstSystem {..}
   where
     subtile _ SS0 = Spectre
@@ -126,7 +126,7 @@ spectre3 = SubstSystem {..}
     -- Expanding to spectres
     -- substMap Delta = fromPairs []
 
-    substMap tile = fromPairs []
+    substMap _ tile = fromPairs []
 
 spectre3T = induceFromFunction (adjRec spectre3) spectre3A
 

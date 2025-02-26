@@ -10,9 +10,9 @@ import System.Exit (exitSuccess)
 
 rendered =
   draw (adjSST penrose3S) penrose3G inBounds
-    (V :< repeat (V, S0)) E0
+    (U :< repeat (U, S1)) E0
   where
-    factor = 5
+    factor = 10
     inBounds (x, y) =
       x < factor * 4 && x > - (factor * 4) &&
       y < factor * 3 && y > - (factor * 3)
@@ -25,7 +25,7 @@ main = do
   putStrLn $ "Render complete, " <> show (length rendered) <> " tiles in total"
   t2 <- getMonotonicTime
   putStrLn $ "Time used: " <> show (t2 - t1)
-  exitSuccess
+  -- exitSuccess
   display FullScreen white
     (scale 40 40 $ pictures $ zipWith makePolygon [0..] rendered)
   where

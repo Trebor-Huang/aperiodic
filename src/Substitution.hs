@@ -1,6 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}
 module Substitution where
 
@@ -18,18 +17,17 @@ fromPairs p a = case a `lookup` p of
     Just b -> b
     Nothing -> error "Bad pairing"
 
-data SubstSystem tile subtile edge subedge
+data SubstSystem tile subtile edge subedge stage
   = SubstSystem {
     -- | Records the tile type of each subtile
     subtile :: tile -> subtile -> tile,
 
-    -- Maps each tile to a list of edge labels,
-    -- and their subtiles/subedges in substitution.
-    -- edgeMap :: Map tile ([(subtile, tile)], [(edge, [subedge])]),
+    stageMap :: subtile -> stage,
+    -- substMap :: tile -> stage -> ...
 
     -- | In a substitution rule, the subedges of the parent
-    --   and all the edges of the child are perfectly paired.
-    substMap :: tile -> Pairing (Either (edge, subedge) (subtile, edge))
+    -- and all the edges of the children are perfectly paired.
+    substMap :: stage -> tile -> Pairing (Either (edge, subedge) (subtile, edge))
   }
 
 -- | Conway signature for tiles.
@@ -112,34 +110,36 @@ zipSigs _ _ = error "Invalid signatures"
 
 -- | The recursive function for calculating neighborhood
 adjRec
-  :: SubstSystem tile subtile edge subedge
+  :: SubstSystem tile subtile edge subedge stage
   -> Signature tile subtile -> edge
   -> Maybe (Signature tile subtile, edge)
   -- ^ Outputs which edge it is entering from
 adjRec _ (_ :< []) _ = Nothing
-adjRec sys (_ :< (t1,s1):ts) e =
-  case substMap sys t1 (Right (s1, e)) of
-    Right (st, e') -> do
+adjRec sys (_ :< (t1,s1):sigtail) e =
+  let stage = stageMap sys s1 in
+  case substMap sys stage t1 (Right (s1, e)) of
+    Right (s1', e') -> do
       -- We are inside the original parent tile
-      let t0' = subtile sys t1 st
-      return (t0' :< (t1,st):ts, e')
-    Left (e', se') -> do
+      let t0' = subtile sys t1 s1'
+      return (t0' :< (t1,s1'):sigtail, e')
+    Left (eo, se') -> do
       -- We step out of the parent tile, on the subedge (e', se')
-      (sig, e'') <- adjRec sys (t1 :< ts) e'
-      enterRec sys sig (e'', se')
+      (sig, eo') <- adjRec sys (t1 :< sigtail) eo
+      enterRec sys stage sig (eo', se')
 
 -- | Recursively calculate the result of entering from an external subedge
 enterRec
-  :: SubstSystem tile subtile edge subedge
-  -> Signature tile subtile -> (edge, subedge)
+  :: SubstSystem tile subtile edge subedge stage
+  -> stage -> Signature tile subtile
+  -> (edge, subedge)
   -> Maybe (Signature tile subtile, edge)
-enterRec sys (t :< ts) (e, s) =
-  case substMap sys t (Left (e, s)) of
-    Right (st, e') -> do
+enterRec sys stage (t1 :< sigtail) (e, se) =
+  case substMap sys stage t1 (Left (e, se)) of
+    Right (s1', e') -> do
       -- We step into a subtile
-      let t0 = subtile sys t st
-      return (t0 :< (t, st):ts, e')
+      let t0' = subtile sys t1 s1'
+      return (t0' :< (t1,s1'):sigtail, e')
     Left (eo, se') -> do
       -- We're stepping out again!!
-      (sig, eo') <- adjRec sys (t :< ts) eo
-      enterRec sys sig (eo', se')
+      (sig, eo') <- adjRec sys (t1 :< sigtail) eo
+      enterRec sys stage sig (eo', se')
