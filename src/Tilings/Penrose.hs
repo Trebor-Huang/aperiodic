@@ -6,8 +6,9 @@ module Tilings.Penrose (
 import Substitution
 import Geometry
 import Automata
-import qualified Data.Set as S
 import Kleenex
+import qualified Data.Set as S
+
 
 data Tile = U | V deriving (Show, Eq, Ord, Enum, Bounded)
 data Edge = E0 | E1 | E2 | E3 deriving (Show, Eq, Ord, Enum, Bounded)

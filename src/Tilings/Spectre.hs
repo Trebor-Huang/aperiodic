@@ -4,11 +4,11 @@ module Tilings.Spectre (
   Tile(..), Subtile(..), Edge(..),
   system, automaton, geometry, transducer, streamer,
   TrigNum(..), Mod12(..)) where
-import qualified Data.Set as S
 import Geometry
 import Substitution
 import Automata
 import Kleenex
+import qualified Data.Set as S
 import Control.Monad (join)
 import Data.Bifunctor (bimap)
 import Data.List (delete)

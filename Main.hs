@@ -24,6 +24,7 @@ sig = T.Spectre :<
 boundX = 100.0
 boundY = 80.0
 
+calculated :: [(Signature T.Tile T.Subtile, [(Double, Double)])]
 calculated =
   draw (adjSST T.streamer) T.geometry inBounds sig T.S0
   where
