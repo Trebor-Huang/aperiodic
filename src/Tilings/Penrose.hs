@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
-module Penrose (
+module Tilings.Penrose (
   Tile(..), Subtile(..), Edge(..),
   system, automaton, geometry, transducer, streamer,
   Golden(..), Mod10(..)) where

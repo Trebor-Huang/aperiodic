@@ -6,15 +6,16 @@ import Control.Monad (guard)
 import Data.Maybe ( fromJust, mapMaybe, isJust, listToMaybe )
 import Utils
 import Substitution
-import Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IS
 
 
 -- No epsilon-transition is allowed
 data FST input output state = FST {
   states :: S.Set state,
-  transitions :: [(state, input, output, state)]
+  transitions :: ![(state, input, output, state)]
 } deriving Show
 
 productFST :: (Eq i) => FST i o1 s1 -> FST i o2 s2 -> FST i (o1, o2) (s1, s2)
@@ -25,14 +26,6 @@ productFST a1 a2 = FST {
     (s2, i2, o2, s2') <- transitions a2
     guard (i1 == i2)
     return ((s1, s2), i1, (o1, o2), (s1', s2'))
-}
-
-nubMachine :: (Eq input, Eq output, Eq state)
-  => FST input output state
-  -> FST input output state
-nubMachine m = FST {
-  states = states m,
-  transitions = nub (transitions m)
 }
 
 mapMachine :: (Ord s', Eq i, Eq o) => (s -> s') -> FST i o s -> FST i o s'
@@ -51,7 +44,7 @@ mapMonotonic f machine = FST {
 -- but has no read fan-outs
 normalizeMachine :: (Ord s, Ord i, Eq o)
   => (FST i o s, s) -> (FST (Maybe i) (Maybe o) (Either s (s, i, s)), Either s (s, i, s))
-normalizeMachine (machine, start) = 
+normalizeMachine (machine, start) =
   let
     st = S.disjointUnion (states machine) $ S.fromList $
       map (\(s, i, _, s') -> (s, i, s')) $ transitions machine
@@ -65,8 +58,8 @@ normalizeMachine (machine, start) =
     }, Left start)
 
 data FSTInt input output = FSTInt {
-  stateInt :: Int,
-  transitionsInt :: [(Int, input, output, Int)]
+  stateInt :: !Int,
+  transitionsInt :: ![(Int, input, output, Int)]
 } deriving Show
 
 numberStates :: Eq state
@@ -111,22 +104,22 @@ transpose automata = FST {
   transitions = map (\(s, o, i, s') -> (s, i, o, s')) $ transitions automata
 }
 
-determinize :: (Ord input, Ord state)
-  => (FSA input state, state)
-  -> (FSA input (Set state), Set state)
+determinize :: (Ord input)
+  => (FSTInt input (), Int)
+  -> (FSA input IntSet, IntSet)
 determinize (nfa, start) = let
-    start' = S.singleton start
-    states = S.fromList $ map fst $ bfs (not . S.null) id start'
+    start' = IS.singleton start
+    states = S.fromList $ map fst $ bfs (not . IS.null) id start'
       (map ((,()) . snd) . getTransitions)
     transitions = [(s, i, (), s') | s <- S.toList states, (i, s') <- getTransitions s]
   in
     (FST {..}, start')
   where
-    -- getTransitions :: Set state -> [(input, Set state)]
+    -- getTransitions :: IntSet -> [(input, IntSet)]
     getTransitions ss =
-      M.toList $ M.fromListWith S.union [(i, S.singleton s2) |
-          s <- S.toList ss,
-          (s1, i, _, s2) <- transitions nfa,
+      M.toList $ M.fromListWith IS.union [(i, IS.singleton s2) |
+          s <- IS.toList ss,
+          (s1, i, _, s2) <- transitionsInt nfa,
           s == s1
         ]
 
@@ -233,7 +226,7 @@ missing fun acc start start' = do
   return $ reverse $ i : inputs
 
 data FreshStates input
-  = FreshST Int [input]
+  = FreshST !Int [input]
   | StartST | EndST
   deriving (Show, Eq, Ord, Functor)
 
@@ -280,17 +273,19 @@ induceFromFunction baseline valid = go (FST {
 
     -- Given an automata, improve it if it can
     improve a@(automata, start, _) = do
-      example <- getMissing $ determinize (forgetOutput $ fsaToFst automata, start)
+      example <- getMissing $
+        determinize $
+        numberStates (forgetOutput $ fsaToFst automata, start)
       return $ induceExample example FreshST a
 
     -- Iterate the improvement
     go a@(automata, start, _) = maybe (fsaToFst automata, start) go (improve a)
 
 -- | Naively simulates the transducer. It is not streaming.
-adjTransNaive :: (Eq edge, Eq tile, Eq subtile, Eq state)
+adjFST :: (Eq edge, Eq tile, Eq subtile, Eq state)
   => (FST (Alphabet tile subtile edge) (Alphabet tile subtile edge) state, state)
   -> Signature tile subtile -> edge -> Maybe (Signature tile subtile, edge)
-adjTransNaive (machine, start) sig e = listToMaybe $ do
+adjFST (machine, start) sig e = listToMaybe $ do
   (word, _) <- naiveSimulate machine (sigToAlphabet (sig, e)) start
   return (alphabetToSig word)
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
-module Spectre (
+module Tilings.Spectre (
   Tile(..), Subtile(..), Edge(..),
   system, automaton, geometry, transducer, streamer,
   TrigNum(..), Mod12(..)) where

@@ -23,10 +23,10 @@ library:
   exposed-modules:
     - Geometry
     - Substitution
-    - Penrose
-    - Spectre
     - Automata
     - Kleenex
+    - Tilings.Penrose
+    - Tilings.Spectre
 
 executable:
   main: Main.hs

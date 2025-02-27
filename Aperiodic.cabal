@@ -15,10 +15,10 @@ library
   exposed-modules:
       Geometry
       Substitution
-      Penrose
-      Spectre
       Automata
       Kleenex
+      Tilings.Penrose
+      Tilings.Spectre
   other-modules:
       Utils
   hs-source-dirs:

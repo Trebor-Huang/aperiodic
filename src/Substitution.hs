@@ -40,8 +40,8 @@ data Signature tile subtile = tile :< [(tile, subtile)] deriving (Eq, Show)
 infix 4 :<
 
 data Alphabet tile subtile edge
-  = Begin tile edge
-  | Inflate tile subtile
+  = Begin !tile !edge
+  | Inflate !tile !subtile
   deriving (Show, Eq, Ord)
 
 instance (Bounded tile, Bounded subtile, Bounded edge)
@@ -82,9 +82,9 @@ alphabetToSig (Begin t e : word) = (t :< map fromInflate word, e)
 alphabetToSig _ = error "Invalid string"
 
 data AugAlphabet tile subtile edge
-  = Begin2 tile edge tile edge
-  | Inflate2 tile subtile tile subtile
-  | Accept tile
+  = Begin2 !tile !edge !tile !edge
+  | Inflate2 !tile !subtile !tile !subtile
+  | Accept !tile
   deriving (Show, Eq, Ord)
 
 zipSigs :: Eq tile
